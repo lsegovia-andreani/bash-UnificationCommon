@@ -1,84 +1,74 @@
 #!/bin/sh
-OCPATH="$PWD/clients/oc"
-PATH=$PATH:OCPATH
+BUC=${BUC:-~/.bash-UnificationCommon}
 
-echo
-echo "Starting builder..."
-echo
-echo "Checking dependencies..."
-echo
-DEPENDENCY=$PWD"/clients/oc/oc.exe"
-if [ ! -f "$DEPENDENCY" ]; then
-   echo "Installing openshift client..."
-   unzip "$PWD/clients/oc/oc.zip" -d "$PWD/clients/oc/"
-fi
-DEPENDENCY=$PWD"/clients/oc/kubectl.exe"
-if [ ! -f "$DEPENDENCY" ]; then
-   echo "Installing openshift kubernetes client..."
-   unzip "$PWD/clients/oc/kubectl.zip" -d "$PWD/clients/oc/"
-fi
-echo
-echo "Ready!"
-clear
-echo  
-echo "Login on openshift"
-echo
-read -p "User: " USER
-read -sp "Password: " PASSWORD
-OCPATH="$PWD/clients/oc"
-PATH=$PATH:OCPATH
-oc login https://openshift.andreani.com.ar:443 --username="$USER" --password="$PASSWORD" && RESULT=0 || RESULT=1
-if [ $RESULT -eq 1 ]
-then
-echo -e "\e[91mLoging fail!\e[39m"
-exit 1
-else
-  echo "Loging succesfully!"
-  clear
-fi
-echo
-echo -e "\e[92mBuilder ready!\e[39m"
-echo
-echo -e "\e[33mSelect environment:\e[39m"
-echo
-echo "1 - Staging"
-echo "2 - Production"
-echo
-read -p "Option: " ENV
-echo
+login() {
+  echo  
+  echo "Login on openshift"
+  echo
+  read -p "User: " USER
+  read -sp "Password: " PASSWORD
+  OCPATH="$BUC/clients/oc"  
+  PATH=$PATH:OCPATH
+  oc login https://openshift.andreani.com.ar:443 --username="$USER" --password="$PASSWORD" && RESULT=0 || RESULT=1
+  if [ $RESULT -eq 1 ]
+  then
+  echo -e "\e[91mLoging fail!\e[39m"
+  exit 1
+  else
+    echo "Loging succesfully!"
+    clear
+  fi
+  echo
+  echo -e "\e[92mBuilder ready!\e[39m"
+}
 
-case "$ENV" in
+environments(){
+  echo
+  echo -e "\e[33mSelect environment:\e[39m"
+  echo
+  echo "1 - Staging"
+  echo "2 - Production"
+  echo
+  read -p "Option: " ENV
+  echo
 
-  "1")
-    echo "Environment: STAGING"
-    NAME_SPACE="unificacion-test"
-    ;;
+  case "$ENV" in
 
-  "2")
-    echo "Environment: PRODUCTION"
-    NAME_SPACE="unificacion-produccion"
-    ;;
-  *)
-    echo -e "\e[91mEnvironment not found!\e[39m" && exit 1
-    ;;
-esac
-echo
-echo -e "\e[33mApplications:\e[39m"
-echo
-echo "1 - Unificacion Api"
-echo "2 - Unificacion Api Alertran"
-echo "3 - Unificacion Api Integra"
-echo "4 - Unificacion Home"
-echo "5 - Unificacion Planificacion"
-echo "6 - Unificacion Recepcion Expedicion"
-echo "7 - Unificacion Salida Distribucion"
-echo "8 - Unificacion Recepcion Expedicion"
-echo
-read -p "Option: " APP
-echo
+    "1")
+      echo "Environment: STAGING"
+      NAME_SPACE="unificacion-test"
+      ;;
+
+    "2")
+      echo "Environment: PRODUCTION"
+      NAME_SPACE="unificacion-produccion"
+      ;;
+    *)
+      echo -e "\e[91mEnvironment not found!\e[39m" && exit 1
+      ;;
+  esac
+  echo
+
+}
 
 
-case "$APP" in
+applications(){
+  echo -e "\e[33mApplications:\e[39m"
+  echo
+  echo "1 - Unificacion Api"
+  echo "2 - Unificacion Api Alertran"
+  echo "3 - Unificacion Api Integra"
+  echo "4 - Unificacion Home"
+  echo "5 - Unificacion Planificacion"
+  echo "6 - Unificacion Recepcion Expedicion"
+  echo "7 - Unificacion Salida Distribucion"
+  echo "8 - Unificacion Recepcion Expedicion"
+  echo
+  read -p "Option: " APP
+  echo
+
+
+  case "$APP" in
 
   "1")
     if [ $ENV -eq 1 ]
@@ -163,16 +153,32 @@ case "$APP" in
   *)
      echo -e "\e[91mApplication not found!!\e[39m" && exit 1
     ;;
-esac
+  esac
 
-oc start-build "$BUILD_CONFIG" -n "$NAME_SPACE" && RESULT=0 || RESULT=1
+}
 
-echo
+build(){
+  
+  oc start-build "$BUILD_CONFIG" -n "$NAME_SPACE" && RESULT=0 || RESULT=1
+  echo
 
-if [ $RESULT -eq 1 ]
-then
-    echo -e "\e[91mError starting new build!\e[39m"
-    exit 1
-else
-    echo -e "\e[92mBuild completed!\e[39m"
-fi
+  if [ $RESULT -eq 1 ]
+  then
+      echo -e "\e[91mError starting new build!\e[39m"
+      exit 1
+  else
+      echo -e "\e[92mBuild completed!\e[39m"
+  fi
+
+}
+
+main() {
+
+  login
+  environments
+  applications
+  build
+
+}
+
+main "$@"
