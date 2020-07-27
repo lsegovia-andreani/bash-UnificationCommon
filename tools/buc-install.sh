@@ -37,9 +37,33 @@ setup_unificationcommon() {
 	echo
 }
 
+
+configure() {
+	echo
+	echo "Starting builder..."
+	echo
+	echo "Checking dependencies..."
+	echo
+	DEPENDENCY=$BUC"/clients/oc/oc.exe"
+	if [ ! -f "$DEPENDENCY" ]; then
+	echo "Installing openshift client..."
+	unzip "$PWD/clients/oc/oc.zip" -d "$BUC/clients/oc/"
+	fi
+	DEPENDENCY=$BUC"/clients/oc/kubectl.exe"
+	if [ ! -f "$DEPENDENCY" ]; then
+	echo "Installing openshift kubernetes client..."
+	unzip "$BUC/clients/oc/kubectl.zip" -d "$BUC/clients/oc/"
+	fi
+	echo
+	echo "Ready!"
+}
+
 main() {
 	# Run as unattended if stdin is closed
 	setup_unificationcommon
+	echo
+	configure
+
 	printf "$GREEN"
 	cat <<-'EOF'
          ____  _   _  ____ 
